@@ -3,54 +3,108 @@ using Xunit;
 using IIG.FileWorker;
 using System.IO;
 
-namespace XUnitTestProject1 {
-    public class UnitTest1 {
+namespace XUnitTest {
+    public class BaseFileWorkerTests {
         private string testsDirFullPath = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "\\test";
+
         [Theory]
         [InlineData("Test.txt")]
-        [InlineData("gucci.png")]
-        [InlineData("gucci2.png")]
-        [InlineData(null)]
+        [InlineData("FileDoesNotExist.txt")]
         public void TestGetFileName(string filename) {
             string path = testsDirFullPath + "\\" + filename;
             string realName = BaseFileWorker.GetFileName(path);
 
             Assert.Equal(filename, realName);
         }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void TestGetFileNameException(string filename) {
+            try {
+                BaseFileWorker.GetFileName(filename);
+            } catch (Exception e) {
+                Assert.NotNull(e);
+            }
+        }
+
         [Theory]
         [InlineData("Test.txt")]
-        [InlineData(null)]
+        [InlineData("FileDoesNotExist.txt")]
         public void TestGetFullPath(string filename) {
             string fullPathExpected = testsDirFullPath + "\\" + filename;
             string localPath = new Uri(fullPathExpected).LocalPath;
-            string fullPathReal = BaseFileWorker.GetFullPath(localPath);
-            Assert.Equal(fullPathExpected, fullPathReal);
+            Assert.Equal(fullPathExpected, BaseFileWorker.GetFullPath(localPath));
         }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void TestGetFullPathException(string filename)
+        {
+            try {
+                BaseFileWorker.GetFullPath(filename);
+            } catch (Exception e) {
+                Assert.NotNull(e);
+            }
+        }
+
         [Theory]
         [InlineData("Test.txt")]
-        [InlineData(null)]
+        [InlineData("FileDoesNotExist.txt")]
         public void TestGetPath(string filename) {
             string pathExpected = testsDirFullPath + "\\" + filename;
             string filePathExpected = testsDirFullPath;
-            string fullPathReal = BaseFileWorker.GetPath(pathExpected);
-            Assert.Equal(filePathExpected, fullPathReal);
+            Assert.Equal(filePathExpected, BaseFileWorker.GetPath(pathExpected));
         }
+
         [Theory]
-        [InlineData("dir")]
+        [InlineData("")]
         [InlineData(null)]
-        public void TestMkDir(string dirname) {
-            string fullPathExpected = Environment.CurrentDirectory + "\\" + dirname;
-            string fullPathReal = BaseFileWorker.MkDir(dirname);
+        public void TestGetPathException(string filename) {
+            try {
+                BaseFileWorker.GetPath(filename);
+            } catch (Exception e) {
+                Assert.NotNull(e);
+            }
+        }
+
+        [Fact]
+        public void TestMkDir() {
+            string fullPathExpected = Environment.CurrentDirectory + "\\dir";
+            string fullPathReal = BaseFileWorker.MkDir("dir");
             Assert.Equal(fullPathExpected, fullPathReal);
         }
+
         [Theory]
-        [InlineData("Test.txt", "oh shit i'm sorry\r\nsorry for what")]
-        [InlineData(null, "there is no such file")]
-        public void TestReadAll(string filename, string text) {
-            string fullPathExpected = testsDirFullPath + "\\" + filename;
-            string contentReal = BaseFileWorker.ReadAll(fullPathExpected);
-            Assert.Equal(text, contentReal);
+        [InlineData("")]
+        [InlineData(null)]
+        public void TestMkDirException(string dirname) {
+            try {
+                BaseFileWorker.MkDir(dirname);
+            } catch (Exception e) {
+                Assert.NotNull(e);
+            }
         }
+
+        [Fact]
+        public void TestReadAll() {
+            string fullPathExpected = testsDirFullPath + "\\Test.txt";
+            string contentReal = BaseFileWorker.ReadAll(fullPathExpected);
+            Assert.Equal("oh shit i'm sorry\r\nsorry for what", contentReal);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(null)]
+        public void TestReadAllException(string dirname) {
+            try {
+                BaseFileWorker.ReadAll(dirname);
+            } catch (Exception e) {
+                Assert.NotNull(e);
+            }
+        }
+
         [Fact]
         public void TestReadLines() {
             string fileFullPath = testsDirFullPath + "\\Test.txt";
@@ -58,29 +112,42 @@ namespace XUnitTestProject1 {
             string[] lines = BaseFileWorker.ReadLines(fileFullPath);
             Assert.Equal(linesExpected, lines);
         }
+
         [Theory]
-        [InlineData("Test.txt", "Copied.txt", false)]
+        [InlineData("")]
+        [InlineData(null)]
+        public void TestReadLinesException(string dirname) {
+            try {
+                BaseFileWorker.ReadLines(dirname);
+            } catch (Exception e) {
+                Assert.NotNull(e);
+            }
+        }
+
+        [Theory]
         [InlineData("Test.txt", "Copied.txt", true)]
+        [InlineData("Test.txt", "Copied.txt", false)]
         public void TestTryCopy(string from, string to, bool force) {
             string fileFromFullPath = testsDirFullPath + "\\" + from;
             string fileToFullPath = testsDirFullPath + "\\" + to;
             bool copied = BaseFileWorker.TryCopy(fileFromFullPath, fileToFullPath, force);
-            Assert.True(copied, "Not copied");
+            Assert.True(copied);
         }
-        [Theory]
-        [InlineData("TryWrite.txt", "should write it in file")]
-        [InlineData(null, "wrong filename")]
-        public void TestTryWrite(string filename, string text) {
-            string fileWrittenFullPath = testsDirFullPath + "\\" + filename;
-            bool written = BaseFileWorker.TryWrite(text, fileWrittenFullPath);
-            Assert.True(written, "Not written");
+
+        [Fact]
+        public void TestTryWrite() {
+            string fileWrittenFullPath = testsDirFullPath + "\\TryWrite.txt";
+            bool written = BaseFileWorker.TryWrite("should write it in file", fileWrittenFullPath);
+            Assert.True(written);
         }
+
         [Theory]
         [InlineData("Write.txt", "should write it in file")]
+        [InlineData("", "wrong filename")]
         public void TestWrite(string filename, string text) {
             string fileWrittenFullPath = testsDirFullPath + "\\" + filename;
             bool written = BaseFileWorker.Write(text, fileWrittenFullPath);
-            Assert.True(written, "Not written");
+            Assert.True(written);
         }
     }
 }
